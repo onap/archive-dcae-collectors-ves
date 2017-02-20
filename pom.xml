@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.openecomp.dcae.collectors.ves</groupId>
 	<artifactId>OpenVESCollector</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<name>OpenVESCollector</name>
 	<description>OpenVESCollector</description>
 
@@ -46,6 +46,7 @@
 		<dependency.locations.enabled>false</dependency.locations.enabled>
 		<!-- <sonar.host.url>http://localhost:9000</sonar.host.url> -->
 		<!-- <maven.test.skip>true</maven.test.skip> -->
+		<nexusproxy>https://nexus.openecomp.org</nexusproxy>
 	</properties>
 
 	<pluginRepositories>
@@ -522,7 +523,7 @@
 				</plugin>
 
 				<!-- blackduck maven plugin -->
-				<plugin>
+				<!--plugin>
 					<groupId>com.blackducksoftware.integration</groupId>
 					<artifactId>hub-maven-plugin</artifactId>
 					<version>1.4.0</version>
@@ -540,7 +541,7 @@
 							</goals>
 						</execution>
 					</executions>
-				</plugin>
+				</plugin-->
 			</plugins>
 		</pluginManagement>
 		<plugins>
@@ -654,5 +655,16 @@
 			<!-- <url>file:LOCALDIR/${project.artifactId}/</url> -->
 			<url>dav:https://ecomp-nexus:8443/repository/dcae-javadoc/${project.artifactId}/${project.version}</url>
 		</site>
+		<repository>
+			<id>ecomp-releases</id>
+			<name>Open eCOMP Release Repository</name>
+			<url>${nexusproxy}/content/repositories/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>ecomp-snapshots</id>
+			<name>Open eCOMP Snapshot Repository</name>
+			<url>${nexusproxy}/content/repositories/snapshots/</url>
+		</snapshotRepository>
+
 	</distributionManagement>
 </project>
