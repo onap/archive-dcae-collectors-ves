@@ -144,12 +144,14 @@
 		</dependency>
 	</dependencies>
 
+<!--
 	<repositories>
 		<repository>
 			<id>external-repository</id>
 			<url>https://oss.sonatype.org/content/repositories</url>
 		</repository>
 	</repositories>
+-->
 
 	<build>
 		<pluginManagement>
