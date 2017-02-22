@@ -52,18 +52,21 @@ gunzip -c ${AR} | tar xvf - -C ${APP_DIR} --strip-components=1
 cat <<EOF > "${DCM_DIR}/start-manager.sh"
 #!/bin/bash
 
-MAIN='org.openecomp.dcae.controller.service.standardeventcollector.servers.manager.DcaeControllerServiceStandardeventcollectorManagerServer'
-ACTION='start'
+MAIN=org.openecomp.dcae.controller.service.standardeventcollector.servers.manager.DcaeControllerServiceStandardeventcollectorManagerServer
+ACTION=start
 
-WORKDIR='/opt/app/manager'
-LOGS="${WORKDIR}/logs"
+WORKDIR=/opt/app/manager
 
-[ ! -d "$LOGS" ] && mkdir -p "$LOGS"
+LOGS=\$WORKDIR/logs
 
-echo 10.0.4.102 $(hostname).dcae.simpledemo.openecomp.org >> /etc/hosts
+mkdir -p \$LOGS
 
-exec java -cp ./config:./lib:./lib/*:./bin "${MAIN}" "${ACTION}" \
-    > logs/manager.out 2>logs/manager.err
+cd \$WORKDIR
+
+echo 10.0.4.102 \$(hostname).dcae.simpledemo.openecomp.org >> /etc/hosts
+
+exec java -cp ./config:./lib:./lib/*:./bin \$MAIN \$ACTION > logs/manager.out 2>logs/manager.err
+
 EOF
 
 chmod 775 "${DCM_DIR}/start-manager.sh"
