@@ -34,10 +34,11 @@ DCM_DIR="${STAGE}/opt/app/manager"
 unzip -qo -d "${DCM_DIR}" "${DCM_AR}"
 
 # unarchive the collector
-AR=${WORKSPACE}/target/OpenVESCollector-1.0.0-bundle.tar.gz
+VERSION=$(xpath -e '/project/version/text()' pom.xml)
+AR=${WORKSPACE}/target/OpenVESCollector-${VERSION}-bundle.tar.gz
 APP_DIR=${STAGE}/opt/app/SEC
 
-[ -d ${STAGE}/opt/app/OpenVESCollector-1.0.0 ] && rm -rf ${STAGE}/opt/app/OpenVESCollector-1.0.0
+[ -d ${STAGE}/opt/app/OpenVESCollector-${VERSION} ] && rm -rf ${STAGE}/opt/app/OpenVESCollector-$VERSION
 
 [ ! -f $APP_DIR ] && mkdir -p ${APP_DIR}
 
