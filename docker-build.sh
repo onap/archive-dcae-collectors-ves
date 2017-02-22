@@ -65,6 +65,11 @@ cd \$WORKDIR
 
 echo 10.0.4.102 \$(hostname).dcae.simpledemo.openecomp.org >> /etc/hosts
 
+if [ ! -e config ]; then
+	echo no configuration directory setup: \$WORKDIR/config
+	exit 1
+fi
+
 exec java -cp ./config:./lib:./lib/*:./bin \$MAIN \$ACTION > logs/manager.out 2>logs/manager.err
 
 EOF
@@ -97,7 +102,7 @@ COPY opt /opt
 
 EXPOSE 9999
 
-CMD [ '/opt/app/manager/start-manager.sh' ]
+CMD [ "/opt/app/manager/start-manager.sh" ]
 EOF
 
 #
