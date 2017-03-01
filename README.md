@@ -14,7 +14,7 @@ mvn clean install
 
 ### Docker Image
 
-The jar file is bundled into a docker image installed by the DCAE Controller. Following is the process to creating the image
+The jar file is bundled with DCM controller jar into a docker image; This will be installed by the DCAE Controller. Following is the process to creating the image
 
 #### Set up the packaging environment
 1. Extract the VESCollector code and do mvn build
