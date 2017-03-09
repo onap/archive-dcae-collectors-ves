@@ -108,8 +108,15 @@ EOF
 #
 # build the docker image. tag and then push to the remote repo
 #
-IMAGE='dcae-controller-common-event'
-TAG='1.0.0'
+IMAGE='openecomp/dcae-controller-common-event'
+#TAG='1.0.0'
+VERSION=$(xpath -e "//project/version/text()" "pom.xml")
+EXT=$(echo "$VERSION" | rev | cut -s -f1 -d'-' | rev)
+if [ -z "$EXT" ]; then
+    VERSION=$(echo "${VERSION}-STAGING")
+fi
+TIMESTAMP=$(date +%C%y%m%dT%H%M%S)
+TAG="$VERSION-$TIMESTAMP"
 LFQI="${IMAGE}:${TAG}"
 BUILD_PATH="${WORKSPACE}/target/stage"
 
@@ -138,4 +145,13 @@ if [ ! -z "$REPO" ]; then
 
     # push to remote repo
     docker push "${RFQI}"
+
+
+    TAG="LATEST"
+    LFQI="${IMAGE}:${TAG}"
+    RFQI2="${REPO}/${LFQI}"
+    echo "$LFQI"
+    echo "$RFQI2"
+    docker tag "${RFQI}" "${RFQI2}"
+    docker push "${RFQI2}"
 fi
