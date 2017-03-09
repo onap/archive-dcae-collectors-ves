@@ -111,10 +111,12 @@ EOF
 IMAGE='openecomp/dcae-collector-common-event'
 #TAG='1.0.0'
 VERSION=$(xpath -e "//project/version/text()" "pom.xml")
+VERSION=$(echo $VERSION |sed 's/\"//')
 EXT=$(echo "$VERSION" | rev | cut -s -f1 -d'-' | rev)
 if [ -z "$EXT" ]; then
     VERSION=$(echo "${VERSION}-STAGING")
 fi
+
 TIMESTAMP=$(date +%C%y%m%dT%H%M%S)
 TAG="$VERSION-$TIMESTAMP"
 LFQI="${IMAGE}:${TAG}"
