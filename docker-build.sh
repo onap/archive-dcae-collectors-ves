@@ -108,7 +108,7 @@ EOF
 #
 # build the docker image. tag and then push to the remote repo
 #
-IMAGE='openecomp/dcae-controller-common-event'
+IMAGE='openecomp/dcae-collector-common-event'
 #TAG='1.0.0'
 VERSION=$(xpath -e "//project/version/text()" "pom.xml")
 EXT=$(echo "$VERSION" | rev | cut -s -f1 -d'-' | rev)
@@ -147,7 +147,7 @@ if [ ! -z "$REPO" ]; then
     docker push "${RFQI}"
 
 
-    TAG="LATEST"
+    TAG="latest"
     LFQI="${IMAGE}:${TAG}"
     RFQI2="${REPO}/${LFQI}"
     echo "$LFQI"
