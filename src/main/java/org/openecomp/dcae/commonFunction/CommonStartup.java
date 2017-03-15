@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.servlet.ServletException;
@@ -43,6 +45,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.openecomp.dcae.restapi.RestfulCollectorServlet;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,8 +89,8 @@ public class CommonStartup extends NsaBaseEndpoint implements Runnable
 	public static final String kSetting_KeyAlias = "collector.keystore.alias";
 	public static final String kDefault_KeyAlias = "tomcat";
 
-	public static final String kSetting_ProcessingConfigs = "collector.hpprocessing";
-	protected static final String[] kDefault_ProcessingConfigs = new String[] { "etc/HPProcessingConfig.json" };
+	public static final String kSetting_DmaapConfigs = "collector.dmaapfile";
+	protected static final String[] kDefault_DmaapConfigs = new String[] { "/etc/DmaapConfig.json" };
 
 	public static final String kSetting_MaxQueuedEvents = "collector.inputQueue.maxPending";
 	public static final int kDefault_MaxQueuedEvents = 1024*4;
@@ -101,7 +104,7 @@ public class CommonStartup extends NsaBaseEndpoint implements Runnable
 	public static final String kSetting_dmaapStreamid = "collector.dmaap.streamid";
 	
 	public static final String kSetting_authflag = "header.authflag";
-	public static final int kDefault_authflag = 0;
+	public static final int kDefault_authflag = -1;
 	
 	public static final String kSetting_authid = "header.authid";
 	public static final String kSetting_authpwd = "header.authpwd";
@@ -164,7 +167,7 @@ public class CommonStartup extends NsaBaseEndpoint implements Runnable
 		}
 		exceptionConfig = settings.getString(kSetting_ExceptionConfig, null);
 		authflag = settings.getInt(CommonStartup.kSetting_authflag, CommonStartup.kDefault_authflag );
-		String [] currentconffile = settings.getStrings (CommonStartup.kSetting_ProcessingConfigs,	CommonStartup.kDefault_ProcessingConfigs ) ;
+		String [] currentconffile = settings.getStrings (CommonStartup.kSetting_DmaapConfigs,	CommonStartup.kDefault_DmaapConfigs ) ;
 		cambriaConfigFile= currentconffile[0] ;
 		streamid = settings.getString(kSetting_dmaapStreamid,null);
 
@@ -181,6 +184,7 @@ public class CommonStartup extends NsaBaseEndpoint implements Runnable
 
 	public static void main ( String[] args )
 	{
+		ExecutorService executor = null;
 		try
 		{
 			// process command line arguments
@@ -193,22 +197,35 @@ public class CommonStartup extends NsaBaseEndpoint implements Runnable
 			settings.push ( new nvReadableTable ( argMap ) );
 			
 			fProcessingInputQueue = new LinkedBlockingQueue<JSONObject> (CommonStartup.kDefault_MaxQueuedEvents);
+			
+			VESLogger.setUpEcompLogging();
+			
 			CommonStartup cs= new CommonStartup ( settings );
-
+			
 			Thread csmain = new Thread(cs);
 			csmain.start();
 			
+			
 			EventProcessor ep = new EventProcessor ();
-			Thread epThread=new Thread(ep);
-		    epThread.start();
-			
-			//cs.startAndAwait ();
-			
+			//Thread epThread=new Thread(ep);
+			//epThread.start();
+			executor = Executors.newFixedThreadPool(20);
+			executor.execute(ep);
+		    
 		}
 		catch ( loadException | missingReqdSetting  | IOException | invalidSettingValue | ServletException | InterruptedException e )
 		{
 			CommonStartup.eplog.error("FATAL_STARTUP_ERROR" + e.getMessage() );
 			throw new RuntimeException ( e );
+		}
+		finally
+		{
+			// This will make the executor accept no new threads
+            // and finish all existing threads in the queue
+			if (executor != null){
+				executor.shutdown();	
+			}
+           
 		}
 	}
 
@@ -216,7 +233,7 @@ public class CommonStartup extends NsaBaseEndpoint implements Runnable
 		try {
 			fTomcatServer.start ();
 		} catch (LifecycleException | IOException e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 		fTomcatServer.await ();
@@ -308,7 +325,7 @@ public class CommonStartup extends NsaBaseEndpoint implements Runnable
 	        result = String.valueOf(report.isSuccess());
 	    }
 	    try {
-	    log.trace("Validation Result:" +result + " Validation report:" + report);
+	    log.debug("Validation Result:" +result + " Validation report:" + report);
 	    }
 	    catch (NullPointerException e){
 	    	log.error("schemavalidate:NullpointerException on report");

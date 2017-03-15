@@ -28,6 +28,7 @@ import javax.servlet.ServletException;
 
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.openecomp.dcae.commonFunction.CommonStartup;
+import org.openecomp.dcae.commonFunction.VESLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,16 +52,17 @@ public class RestfulCollectorServlet extends CommonServlet
 	String authid = null;
 	String authpwd = null;
 	String authlist = null;
+	
 	public RestfulCollectorServlet ( rrNvReadable settings ) throws loadException, missingReqdSetting
 	{
 		super ( settings, "collector", false );
-				authid =  settings.getString(CommonStartup.kSetting_authid,null);
-				if (authid != null)
-				{
-					String authpwdtemp = settings.getString(CommonStartup.kSetting_authpwd,null);
-					authpwd =  new String(Base64.decodeBase64(authpwdtemp));
-				}
-				authlist = settings.getString(CommonStartup.kSetting_authlist,null);
+		authid =  settings.getString(CommonStartup.kSetting_authid,null);
+		if (authid != null)
+		{
+			String authpwdtemp = settings.getString(CommonStartup.kSetting_authpwd,null);
+			authpwd =  new String(Base64.decodeBase64(authpwdtemp));
+		}
+		authlist = settings.getString(CommonStartup.kSetting_authlist,null);
 	}
 
 	
@@ -79,7 +81,7 @@ public class RestfulCollectorServlet extends CommonServlet
 			// we init the base class services with an in-memory (and empty!) config DB.
 			commonServletSetup ( ConfigDbType.MEMORY );
 			
-
+			VESLogger.setUpEcompLogging();
 
 			// setup the servlet routing and error handling
 			final DrumlinRequestRouter drr = getRequestRouter ();
@@ -100,29 +102,31 @@ public class RestfulCollectorServlet extends CommonServlet
 			final DrumlinPlayishRoutingFileSource drs = new DrumlinPlayishRoutingFileSource ( routes );
 			drr.addRouteSource ( drs );
 
+			if (CommonStartup.authflag > 0) {
+				NsaAuthenticator<NsaSimpleApiKey> NsaAuth = new SimpleAuthenticator ();
+				if (authlist != null)
+				{
+					String authpair[] = authlist.split("\\|");
+					for (String pair: authpair) {           
+							String lineid[] = pair.split(",");
+							String listauthid =  lineid[0];	
+							String listauthpwd =  new String(Base64.decodeBase64(lineid[1]));
+							((SimpleAuthenticator) NsaAuth).add(listauthid,listauthpwd);
+				    }
+					
+				}
+				else if (authid != null)
+				{
+					((SimpleAuthenticator) NsaAuth).add(authid,authpwd);
+				}
+				else
+				{
+					//add a default test account
+					((SimpleAuthenticator) NsaAuth).add("admin","collectorpasscode");
+				}
+				this.getSecurityManager().addAuthenticator(NsaAuth);
+			}
 			
-			NsaAuthenticator<NsaSimpleApiKey> NsaAuth = new SimpleAuthenticator ();
-			if (authlist != null)
-			{
-				String authpair[] = authlist.split("\\|");
-				for (String pair: authpair) {           
-						String lineid[] = pair.split(",");
-						String listauthid =  lineid[0];	
-						String listauthpwd =  new String(Base64.decodeBase64(lineid[1]));
-						((SimpleAuthenticator) NsaAuth).add(listauthid,listauthpwd);
-			    }
-				
-			}
-			else if (authid != null)
-			{
-				((SimpleAuthenticator) NsaAuth).add(authid,authpwd);
-			}
-			else
-			{
-				//add a default test account
-				((SimpleAuthenticator) NsaAuth).add("admin","collectorpasscode");
-			}
-			this.getSecurityManager().addAuthenticator(NsaAuth);
 			log.info ( "Restful Collector Servlet is up." );
 		}
 		catch ( SecurityException e )

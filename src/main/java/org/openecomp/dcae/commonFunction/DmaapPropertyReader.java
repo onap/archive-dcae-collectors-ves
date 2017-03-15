@@ -22,13 +22,11 @@ package org.openecomp.dcae.commonFunction;
 
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-
-import java.util.HashMap;
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -45,13 +43,17 @@ public class DmaapPropertyReader {
 
 	   
 	   private static final Logger log = LoggerFactory.getLogger ( DmaapPropertyReader.class );
+	   //static private final VESLogger log = VESLogger.getLogger(DmaapPropertyReader.class, VESLogger.VES_AGENT);
+	   
        public  HashMap<String, String> dmaap_hash = new HashMap<String, String>();
 	   
 	   private DmaapPropertyReader(String CambriaConfigFile) {
 		   
+		   FileReader fr = null;
 		    try {
 		    	JsonElement root = null;
-				root = new JsonParser().parse(new FileReader(CambriaConfigFile));
+		    	fr = new FileReader(CambriaConfigFile);
+				root = new JsonParser().parse(fr);
 				JsonArray jsonObject = (JsonArray) root.getAsJsonObject().get("channels");
 				
 				  for (int i = 0; i < jsonObject.size(); i++) {
@@ -87,6 +89,15 @@ public class DmaapPropertyReader {
 				e1.printStackTrace();
 				log.error("Problem loading Dmaap Channel configuration file: " +e1.toString());
 			}
+		    finally {
+		    	if (fr != null) {
+		    		try {
+		    				fr.close();
+		    			} catch (IOException e) {
+		    				log.error("Error closing file reader stream : " +e.toString());
+		    			}
+		    	}
+		    }
 		   	
 			
 	   }
