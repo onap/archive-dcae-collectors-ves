@@ -5,17 +5,32 @@
 # 2 tag and then push to the remote repo if not verify
 #
 
-
 phase=$1
 
+VERSION=$(xpath -e '//project/version/text()' 'pom.xml')
+VERSION=${VERSION//\"/}
+EXT=$(echo "$VERSION" | rev | cut -s -f1 -d'-' | rev)
+if [ -z "$EXT" ]; then
+  EXT="STAGING"
+fi
 case $phase in 
-  verify|merge|release) 
-    echo Running $phase job
+  verify|merge)
+    if [ "$EXT" != 'SNAPSHOT' ]; then
+      echo "$phase job only takes SNAPSHOT version, got \"$EXT\" instead"
+      exit 1
+    fi 
     ;;
+  release)
+    if [ ! -z "$EXT" ] && [ "$EXT" != 'STAGING' ]; then
+      echo "$phase job only takes STAGING or pure numerical version, got \"$EXT\" instead"
+      exit 1
+    fi
+    ;; 
   *)
-    echo Unknown phase \'$phase\'
+    echo "Unknown phase \"$phase\""
     exit 1
 esac
+echo "Running \"$phase\" job for version \"$VERSION\""
 
 
 # DCAE Controller service manager for VES collector
@@ -34,15 +49,14 @@ DCM_DIR="${STAGE}/opt/app/manager"
 unzip -qo -d "${DCM_DIR}" "${DCM_AR}"
 
 # unarchive the collector
-VERSION=$(xpath -e '/project/version/text()' pom.xml)
 AR=${WORKSPACE}/target/OpenVESCollector-${VERSION}-bundle.tar.gz
 APP_DIR=${STAGE}/opt/app/SEC
 
-[ -d ${STAGE}/opt/app/OpenVESCollector-${VERSION} ] && rm -rf ${STAGE}/opt/app/OpenVESCollector-$VERSION
+[ -d "${STAGE}/opt/app/OpenVESCollector-${VERSION}" ] && rm -rf "${STAGE}/opt/app/OpenVESCollector-${VERSION}"
 
-[ ! -f $APP_DIR ] && mkdir -p ${APP_DIR}
+[ ! -f "${APP_DIR}" ] && mkdir -p "${APP_DIR}"
 
-gunzip -c ${AR} | tar xvf - -C ${APP_DIR} --strip-components=1
+gunzip -c "${AR}" | tar xvf - -C "${APP_DIR}" --strip-components=1
 
 #
 # generate the manager start-up.sh
@@ -109,19 +123,12 @@ EOF
 # build the docker image. tag and then push to the remote repo
 #
 IMAGE='openecomp/dcae-collector-common-event'
-#TAG='1.0.0'
-VERSION=$(xpath -e "//project/version/text()" "pom.xml")
-VERSION=$(echo $VERSION |sed 's/\"//')
-EXT=$(echo "$VERSION" | rev | cut -s -f1 -d'-' | rev)
-if [ -z "$EXT" ]; then
-    VERSION=$(echo "${VERSION}-STAGING")
-fi
+VERSION="${VERSION//[^0-9.]/}"
+VERSION2=$(echo "$VERSION" | cut -f1-2 -d'.')
 
-TIMESTAMP=$(date +%C%y%m%dT%H%M%S)
-TAG="$VERSION-$TIMESTAMP"
-LFQI="${IMAGE}:${TAG}"
+TIMESTAMP="-$(date +%C%y%m%dT%H%M%S)"
+LFQI="${IMAGE}:${VERSION}${TIMESTAMP}"
 BUILD_PATH="${WORKSPACE}/target/stage"
-
 # build a docker image
 echo docker build --rm -t "${LFQI}" "${BUILD_PATH}"
 docker build --rm -t "${LFQI}" "${BUILD_PATH}"
@@ -138,22 +145,36 @@ esac
 # io registry  DOCKER_REPOSITORIES="nexus3.openecomp.org:10001 \
 # release registry                   nexus3.openecomp.org:10002 \
 # snapshot registry                   nexus3.openecomp.org:10003"
-REPO='nexus3.openecomp.org:10003'
+# staging registry                   nexus3.openecomp.org:10004"
+case $EXT in
+SNAPSHOT|snapshot)
+    REPO='nexus3.openecomp.org:10003'
+    EXT="-SNAPSHOT"
+    ;;
+STAGING|staging)
+    REPO='nexus3.openecomp.org:10003'
+    #REPO='nexus3.openecomp.org:10004'
+    EXT="-STAGING"
+    ;;
+"")
+    REPO='nexus3.openecomp.org:10002'
+    EXT=""
+    echo "version has no extension, intended for release, in \"$phase\" phase. donot do release here"
+    exit 1
+    ;;
+*)
+    echo "Unknown extension \"$EXT\" in version"
+    exit 1
+    ;;
+esac
 
-if [ ! -z "$REPO" ]; then
-    RFQI="${REPO}/${LFQI}"
-    # tag
-    docker tag "${LFQI}" "${RFQI}"
-
-    # push to remote repo
-    docker push "${RFQI}"
-
-
-    TAG="latest"
-    LFQI="${IMAGE}:${TAG}"
-    RFQI2="${REPO}/${LFQI}"
-    echo "$LFQI"
-    echo "$RFQI2"
-    docker tag "${RFQI}" "${RFQI2}"
-    docker push "${RFQI2}"
-fi
+OLDTAG="${LFQI}"
+PUSHTAGS="${REPO}/${IMAGE}:${VERSION}${EXT}${TIMESTAMP} ${REPO}/${IMAGE}:latest ${REPO}/${IMAGE}:${VERSION2}${EXT}-latest"
+for NEWTAG in ${PUSHTAGS}
+do
+   echo "tagging ${OLDTAG} to ${NEWTAG}" 
+   docker tag "${OLDTAG}" "${NEWTAG}"
+   echo "pushing ${NEWTAG}" 
+   docker push "${NEWTAG}"
+   OLDTAG="${NEWTAG}"
+done
