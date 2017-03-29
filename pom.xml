@@ -46,7 +46,7 @@
 		<dependency.locations.enabled>false</dependency.locations.enabled>
 		<!-- <sonar.host.url>http://localhost:9000</sonar.host.url> -->
 		<!-- <maven.test.skip>true</maven.test.skip> -->
-		<nexusproxy>https://nexus.openecomp.org</nexusproxy>
+		<nexusproxy>https://nexus.onap.org</nexusproxy>
 	</properties>
 
 	<pluginRepositories>
