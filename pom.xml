@@ -698,7 +698,7 @@
 		<site>
 			<id>ecomp-site</id>
 			<!-- <url>file:LOCALDIR/${project.artifactId}/</url> -->
-			<url>dav:${nexusproxy}/content/sites/site/org/openecomp/dcae/collectors/ves/${project.artifactId}/${project.version}/</url>
+			<url>dav:${nexusproxy}/content/sites/site/org/onap/dcae/collectors/ves/${project.artifactId}/${project.version}/</url>
 		</site>
 		<repository>
 			<id>ecomp-releases</id>
