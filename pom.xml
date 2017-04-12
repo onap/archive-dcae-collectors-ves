@@ -46,6 +46,10 @@
 		<!-- <sonar.host.url>http://localhost:9000</sonar.host.url> -->
 		<!-- <maven.test.skip>true</maven.test.skip> -->
 		<nexusproxy>https://nexus.onap.org</nexusproxy>
+		<snapshots.path>content/repositories/snapshots/</snapshots.path>
+		<releases.path>content/repositories/releases/</releases.path>
+		<site.path>content/sites/site/org/onap/dcae/collectors/ves/${project.artifactId}/${project.version}</site.path>
+
 	</properties>
 
 	<pluginRepositories>
@@ -698,17 +702,17 @@
 		<site>
 			<id>ecomp-site</id>
 			<!-- <url>file:LOCALDIR/${project.artifactId}/</url> -->
-			<url>dav:${nexusproxy}/content/sites/site/org/onap/dcae/collectors/ves/${project.artifactId}/${project.version}/</url>
+			<url>dav:${nexusproxy}/${site.path}/</url>
 		</site>
 		<repository>
 			<id>ecomp-releases</id>
 			<name>Open eCOMP Release Repository</name>
-			<url>${nexusproxy}/content/repositories/releases/</url>
+			<url>${nexusproxy}/${releases.path}</url>
 		</repository>
 		<snapshotRepository>
 			<id>ecomp-snapshots</id>
 			<name>Open eCOMP Snapshot Repository</name>
-			<url>${nexusproxy}/content/repositories/snapshots/</url>
+			<url>${nexusproxy}/${snapshots.path}</url>
 		</snapshotRepository>
 
 	</distributionManagement>
