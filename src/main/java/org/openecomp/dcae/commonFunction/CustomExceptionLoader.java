@@ -22,12 +22,10 @@ package org.openecomp.dcae.commonFunction;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 
 import java.util.Map.Entry;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -35,12 +33,14 @@ import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CustomExceptionLoader {
 
     public static HashMap<String, JsonArray> map = null;
     private static final Logger log = LoggerFactory.getLogger ( CustomExceptionLoader.class );
+    //static private final VESLogger log = VESLogger.getLogger(CustomExceptionLoader.class, VESLogger.VES_AGENT);
     
     //For standalone test
     //LoadMap Invoked from servletSetup
@@ -65,10 +65,11 @@ public class CustomExceptionLoader {
 	public static void LoadMap () {
 		
 		 map = new HashMap<String, JsonArray>();
-		 
+		 FileReader fr = null;
 		 try {
 			 	JsonElement root = null;
-			 	root = new JsonParser().parse(new FileReader(CommonStartup.exceptionConfig));
+			 	fr = new FileReader(CommonStartup.exceptionConfig);
+			 	root = new JsonParser().parse(fr);
 			 	JsonObject jsonObject = root.getAsJsonObject().get("code").getAsJsonObject();
 
 				for (Entry<String, JsonElement> entry : jsonObject.entrySet()) {
@@ -85,6 +86,15 @@ public class CustomExceptionLoader {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		 	finally {
+		    	if (fr != null) {
+		    		try {
+		    				fr.close();
+		    			} catch (IOException e) {
+		    				log.error("Error closing file reader stream : " +e.toString());
+		    			}
+		    	}
+		    }
 	}
 
 	public static String[] LookupMap (String error, String errormsg) {

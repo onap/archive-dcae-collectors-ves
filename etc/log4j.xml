@@ -82,7 +82,7 @@
 	</appender>
 
 	<appender name="ECOMP_ERROR" class="org.apache.log4j.RollingFileAppender">
-		<param name="threshold" value="INFO" />	<!-- only WARN and ERROR are allowed in this log -->
+		<param name="threshold" value="WARN" />	<!-- only WARN and ERROR are allowed in this log -->
 		<param name="File" value="./logs/ecomp/error.log" />
 		<param name="MaxFileSize" value="128MB"/>
 		<param name="MaxBackupIndex" value="10"/>
@@ -90,7 +90,7 @@
 	</appender>
 
 	<appender name="ECOMP_DEBUG" class="org.apache.log4j.RollingFileAppender">
-		<param name="threshold" value="INFO" />
+		<param name="threshold" value="DEBUG" />
 		<param name="File" value="./logs/ecomp/debug.log" />
 		<param name="MaxFileSize" value="128MB"/>
 		<param name="MaxBackupIndex" value="20"/>
@@ -103,6 +103,8 @@
 		<appender-ref ref="FILE" />
 		<appender-ref ref="CONSOLE" />
 		<appender-ref ref="ECOMP_AUDIT" />
+		<appender-ref ref="ECOMP_DEBUG" />
+		<appender-ref ref="ECOMP_ERROR" />
 	</root>
 	
 	<logger name="org.openecomp.dcae.commonFunction.input" additivity="false">
@@ -149,19 +151,21 @@
 		<appender-ref ref="ECOMP_DEBUG" />
 	</logger>
     
+    <logger name="org.openecomp.dcae.commonFunction.EventPublisher" additivity="false">
+		<level value="debug"/>
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="FILE" />
+	</logger>
+    
     
 	<logger name="com.att.nsa.apiClient.http.HttpClient" additivity="false">
 		<level value="info"/>
-		<appender-ref ref="ECOMP_ERROR" />
-		<appender-ref ref="EFILE"/>
 		<appender-ref ref="FILE" />
 		<appender-ref ref="CONSOLE" />
 	</logger>
     
     <logger name="com.att.nsa.cambria.client.impl.CambriaSimplerBatchPublisher" additivity="false">
 		<level value="info"/>
-		<appender-ref ref="ECOMP_ERROR" />
-		<appender-ref ref="EFILE"/>
 		<appender-ref ref="FILE" />
 		<appender-ref ref="CONSOLE" />
 	</logger>

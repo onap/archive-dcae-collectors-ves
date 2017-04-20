@@ -21,17 +21,20 @@
 package org.openecomp.dcae.commonFunction;
 
 import java.io.IOException;
+
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.security.GeneralSecurityException;
-import java.net.MalformedURLException;
 
 import com.att.nsa.cambria.client.CambriaBatchingPublisher;
 import com.att.nsa.cambria.client.CambriaClientBuilders;
+import com.att.nsa.clock.SaClock;
+import com.att.nsa.logging.LoggingContext;
+import com.att.nsa.logging.log4j.EcompFields;
 
 
 public class EventPublisher {
@@ -40,90 +43,132 @@ public class EventPublisher {
 	private static CambriaBatchingPublisher pub = null;
 	
 	private String streamid = "";
-	private static Logger log = LoggerFactory.getLogger(EventPublisher.class.getName());
+	private String ueburl="";
+	private String topic="";
+	private String authuser="";
+	private String authpwd="";
 	
-	
+	private static Logger log = LoggerFactory.getLogger(EventPublisher.class);
 
-	private EventPublisher(String CambriaConfigFile, String newstreamid) {
+	
+	private EventPublisher( String newstreamid) {
 		
 		this.streamid = newstreamid;
 		try { 
-			String basicAuthUsername = DmaapPropertyReader.getInstance(CambriaConfigFile).getKeyValue(streamid+".basicAuthUsername");
-			if (basicAuthUsername != null)
-			{
-				//log.debug(streamid+".cambria.url"  + streamid+".cambria.topic");
-				log.debug("URL:" + DmaapPropertyReader.getInstance(CambriaConfigFile).getKeyValue(streamid+".cambria.url") + "TOPIC:" + DmaapPropertyReader.getInstance(CambriaConfigFile).getKeyValue(streamid+".cambria.topic") +  "AuthUser:" + DmaapPropertyReader.getInstance(CambriaConfigFile).getKeyValue(streamid+".basicAuthUsername") +  "Authpwd:" + DmaapPropertyReader.getInstance(CambriaConfigFile).getKeyValue(streamid+".basicAuthPassword"));
-		
-				pub = new CambriaClientBuilders.PublisherBuilder ()
-				 .usingHosts (DmaapPropertyReader.getInstance(CambriaConfigFile).dmaap_hash.get(streamid+".cambria.url"))
-				 .onTopic (DmaapPropertyReader.getInstance(CambriaConfigFile).dmaap_hash.get(streamid+".cambria.topic"))
-				 .usingHttps()
-				 .authenticatedByHttp ( DmaapPropertyReader.getInstance(CambriaConfigFile).dmaap_hash.get(streamid+".basicAuthUsername"), DmaapPropertyReader.getInstance(CambriaConfigFile).dmaap_hash.get(streamid+".basicAuthPassword") )
-				 .build ();
-			} 
-			else
-			{
-				//log.debug(streamid+".cambria.url"  + streamid+".cambria.topic");
-				log.debug("URL:" + DmaapPropertyReader.getInstance(CambriaConfigFile).getKeyValue(streamid+".cambria.url") + "TOPIC:" + DmaapPropertyReader.getInstance(CambriaConfigFile).getKeyValue(streamid+".cambria.topic"));
+				ueburl=DmaapPropertyReader.getInstance(CommonStartup.cambriaConfigFile).dmaap_hash.get(streamid+".cambria.url");
+				
+				if (ueburl==null){
+					ueburl= DmaapPropertyReader.getInstance(CommonStartup.cambriaConfigFile).dmaap_hash.get(streamid+".cambria.hosts");
+				}
+				topic= DmaapPropertyReader.getInstance(CommonStartup.cambriaConfigFile).getKeyValue(streamid+".cambria.topic");
+				authuser = DmaapPropertyReader.getInstance(CommonStartup.cambriaConfigFile).getKeyValue(streamid+".basicAuthUsername");
 				
 				
-				pub = new CambriaClientBuilders.PublisherBuilder ()
-						 .usingHosts (DmaapPropertyReader.getInstance(CambriaConfigFile).dmaap_hash.get(streamid+".cambria.hosts"))
-						 .onTopic (DmaapPropertyReader.getInstance(CambriaConfigFile).dmaap_hash.get(streamid+".cambria.topic"))
-						 .build ();
-							
-			}
-		}
-		catch(GeneralSecurityException | MalformedURLException e ) {
-			log.error("CambriaClientBuilders connection exception : " + e.getMessage());
+				if (authuser != null) {
+							authpwd= DmaapPropertyReader.getInstance(CommonStartup.cambriaConfigFile).dmaap_hash.get(streamid+".basicAuthPassword");
+				}			
 		} 
 		catch(Exception e) {
-			log.error("CambriaClientBuilders connection exception : " + e.getMessage());
+			log.error("CambriaClientBuilders connection reader exception : " + e.getMessage());
+			
 		}
 		         
 	}
 	
-	public static synchronized EventPublisher getInstance( String CambriaConfigFile, String streamid){
+	
+	public static synchronized EventPublisher getInstance( String streamid){
 	       if (instance == null) {
-	           instance = new EventPublisher(CambriaConfigFile, streamid);
+	           instance = new EventPublisher(streamid);
+	       }
+	       if (!instance.streamid.equals(streamid)){
+	    	   instance.closePublisher();
+	    	   instance = new EventPublisher(streamid);
 	       }
 	       return instance;
 	      
 		}
 	
-	public synchronized void sendEvent(String event, String newstreamid ) {
 	
-		//Check if streamid changed
-		if(! newstreamid.equals(this.streamid)) { 
-			closePublisher();
-			instance = new EventPublisher (CommonStartup.cambriaConfigFile,  newstreamid);
+	public synchronized void sendEvent(JSONObject event) {
+		
+		log.debug("EventPublisher.sendEvent: instance for publish is ready");
+		
+		
+		if (event.has("VESuniqueId"))
+		{
+			String uuid = event.get("VESuniqueId").toString();
+			LoggingContext localLC = VESLogger.getLoggingContextForThread(uuid.toString());
+			localLC .put ( EcompFields.kBeginTimestampMs, SaClock.now () );
+			log.debug("Removing VESuniqueid object from event");
+			event.remove("VESuniqueId");
 		}
-
+		
+		
+		
 
 		try {
+		
+				if (authuser != null)
+				{
+					log.debug("URL:" + ueburl + "TOPIC:" + topic +  "AuthUser:" + authuser +  "Authpwd:" + authpwd);
+					pub = new CambriaClientBuilders.PublisherBuilder ()
+					 .usingHosts (ueburl)
+					 .onTopic (topic)
+					 .usingHttps()
+					 .authenticatedByHttp (authuser, authpwd )
+					 .logSendFailuresAfter(5)
+				//	 .logTo(log)
+				//	 .limitBatch(100, 10)
+					 .build ();
+				} 
+				else
+				{
+			
+					log.debug("URL:" + ueburl + "TOPIC:" + topic );
+					pub = new CambriaClientBuilders.PublisherBuilder ()
+							.usingHosts (ueburl)
+							 .onTopic (topic)
+					//		 .logTo(log)
+							 .logSendFailuresAfter(5)
+					//		 .limitBatch(100, 10)
+							 .build ();
+								
+				}
+			
 			int pendingMsgs = pub.send("MyPartitionKey", event.toString());
+			//this.wait(2000);
 			
 			if(pendingMsgs > 100) {
 				log.info("Pending Message Count="+pendingMsgs);
 			}
-		
-			CommonStartup.oplog.info ("Event Published:" + event);
-		} catch(IOException ioe) {
-			log.error("Unable to publish event:" + event + " Exception:" + ioe.toString()); 
+			
+			//closePublisher();
+			log.info("pub.send invoked - no error");
+			CommonStartup.oplog.info ("URL:" + ueburl + "TOPIC:" + topic + "Event Published:" + event);
+			
+		} catch(IOException e) {
+			log.error("IOException:Unable to publish event:" + event + " streamid:" + this.streamid + " Exception:" + e.toString()); 
+		} catch (GeneralSecurityException e) {
+			// TODO Auto-generated catch block
+			log.error("GeneralSecurityException:Unable to publish event:" + event + " streamid:" + this.streamid + " Exception:" + e.toString());
+		} 
+		catch (IllegalArgumentException e)
+		{
+			log.error("IllegalArgumentException:Unable to publish event:" + event + " streamid:" + this.streamid + " Exception:" + e.toString());
 		}
-
-		
-		
-		
+			
 	}
 
 
     public synchronized void closePublisher() {
 		
 		try { 
-			final List<?> stuck = pub.close(20, TimeUnit.SECONDS);
-			if ( stuck.size () > 0 ) { 
-				log.error(stuck.size() + " messages unsent" ); 
+			if (pub!= null)
+			{
+				final List<?> stuck = pub.close(20, TimeUnit.SECONDS);
+				if ( stuck.size () > 0 ) { 
+					log.error(stuck.size() + " messages unsent" ); 
+				}
 			}
 		}
 		catch(InterruptedException ie) {

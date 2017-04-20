@@ -21,7 +21,7 @@
 ###
 
 usage() {
-        echo "SErestfulCollector.sh <start/stop>"
+        echo "VESrestfulCollector.sh <start/stop>"
 }
 
 
@@ -29,7 +29,7 @@ collector_start() {
         collectorPid=`pgrep -f org.openecomp.dcae.commonFunction`
 
         if [ ! -z "$collectorPid" ]; then
-                echo  "WARNING: Restful Standard Event Collector already running as PID $collectorPid";
+                echo  "WARNING: VES Restful Collector already running as PID $collectorPid";
                 echo  "Startup Aborted!!!"
                 exit 1
         fi
@@ -50,9 +50,9 @@ collector_start() {
 
         # run java. The classpath is the etc dir for config files, and the lib dir
         # for all the jars.
-        nohup $JAVA -cp "etc${PATHSEP}lib/*" $JAVA_OPTS $MAINCLASS $* &
+        nohup $JAVA -cp "etc${PATHSEP}lib/*" $JAVA_OPTS -Dhttps.protocols=TLSv1.1,TLSv1.2 $MAINCLASS $* &
         if [ $? -ne 0 ]; then
-                echo "Restful Standard Event Collector has been started!!!"
+                echo "VES Restful Collector has been started!!!"
         fi
 
 
@@ -66,12 +66,12 @@ collector_stop() {
                 kill -9 $collectorPid
                 sleep 5
                 if [ ! "$(pgrep -f org.openecomp.dcae.commonFunction)" ]; then
-                         echo "Restful Standard Event Collector has been stopped!!!"
+                         echo "VES Restful Collector has been stopped!!!"
                 else
-                         echo "Restful Standard Event Collector is being stopped!!!"
+                         echo "VES Restful Collector is being stopped!!!"
                 fi
          else
-                echo  "WARNING: No Restful Standard Event Collector is currently running";
+                echo  "WARNING: No VES Collector instance is currently running";
                 exit 1
          fi
 

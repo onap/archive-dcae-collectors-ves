@@ -2,16 +2,14 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.openecomp.dcae.collectors.ves</groupId>
-	<artifactId>OpenVESCollector</artifactId>
+	<artifactId>VESCollector</artifactId>
 	<version>1.1.0-SNAPSHOT</version>
-	<name>OpenVESCollector</name>
-	<description>OpenVESCollector</description>
-
+	<name>VESCollector</name>
+	<description>VESCollector</description>
 
 	<properties>
-	
  		<compiler.source.version>1.7</compiler.source.version>
-        <compiler.target.version>1.7</compiler.target.version>
+        	<compiler.target.version>1.7</compiler.target.version>
 		<main.basedir>${project.basedir}</main.basedir>
 		<surefire.plugin.version>2.19.1</surefire.plugin.version>
 		<surefire.report.plugin.version>2.19.1</surefire.report.plugin.version>
@@ -33,7 +31,7 @@
 		<!--PLUGIN SETTINGS -->
 
 
-		<pmd.violation.buildfail>true</pmd.violation.buildfail>
+		<pmd.violation.buildfail>false</pmd.violation.buildfail>
 		<findbugs.failOnError>true</findbugs.failOnError>
 		<checkstyle.failOnViolation>true</checkstyle.failOnViolation>
 		<!-- <checkstyle.file.name>checkstyle.xml</checkstyle.file.name> -->
@@ -93,19 +91,9 @@
 			<groupId>com.att.nsa</groupId>
 			<artifactId>nsaServerLibrary</artifactId>
 			<version>1.0.10</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>log4j</groupId>
-					<artifactId>log4j</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
-		<!-- <dependency>
+		<!--<dependency>
 		  <groupId>com.att.nsa</groupId>
 		  <artifactId>saToolkit</artifactId>
 		  <version>1.1.3</version>
@@ -114,7 +102,7 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.19</version>
+			<version>1.7.21</version>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
@@ -122,22 +110,6 @@
 			<version>1.2.17</version>
 		</dependency>
 
-		<!-- embedded tomcat -->
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-catalina</artifactId>
-			<version>7.0.54</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-util</artifactId>
-			<version>7.0.54</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat.embed</groupId>
-			<artifactId>tomcat-embed-core</artifactId>
-			<version>7.0.54</version>
-		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.json/json -->
 		<dependency>
@@ -147,14 +119,14 @@
 		</dependency>
 	</dependencies>
 
-<!--
-	<repositories>
+
+	<!-- <repositories>
 		<repository>
 			<id>external-repository</id>
 			<url>https://oss.sonatype.org/content/repositories</url>
 		</repository>
-	</repositories>
--->
+	</repositories> -->
+
 
 	<build>
 		<pluginManagement>
@@ -455,7 +427,7 @@
 						<execution>
 							<id>cpd-check</id>
 							<goals>
-								<goal>cpd-check</goal>
+							<!-- 	<goal>cpd-check</goal> -->
 							</goals>
 							<configuration>
 								<printFailingErrors>true</printFailingErrors>
@@ -528,7 +500,7 @@
 				</plugin>
 
 				<!-- blackduck maven plugin -->
-				<!--plugin>
+				<!-- <plugin>
 					<groupId>com.blackducksoftware.integration</groupId>
 					<artifactId>hub-maven-plugin</artifactId>
 					<version>1.4.0</version>
@@ -546,7 +518,7 @@
 							</goals>
 						</execution>
 					</executions>
-				</plugin-->
+				</plugin> -->
 			</plugins>
 		</pluginManagement>
 		<plugins>
@@ -632,7 +604,7 @@
         <artifactId>maven-dependency-plugin</artifactId>
         <version>3.0.0</version>
         <executions>
-          <execution>
+            <execution>
             <id>copy</id>
             <phase>compile</phase>
             <goals>
@@ -643,7 +615,7 @@
                 <artifactItem>
                   <groupId>org.openecomp.dcae.controller</groupId>
                   <artifactId>dcae-controller-service-standardeventcollector-manager</artifactId>
-                  <!--version>0.1.0-SNAPSHOT</version-->
+      
                   <version>${project.version}</version>
                   <type>zip</type>
                   <classifier>runtime</classifier>
@@ -652,15 +624,15 @@
                   <destFileName>manager.zip</destFileName>
                 </artifactItem>
               </artifactItems>
-              <!-- other configurations here -->
+      
             </configuration>
           </execution>
         </executions>
       </plugin>
 
-		</plugins>
+     </plugins>
 
-	</build>
+</build>
 
 	<reporting>
 		<plugins>

@@ -8,7 +8,7 @@ This is the repository for VES Collector for Open DCAE.
 This project is organized as a mvn project for a jar package.
 
 ```
-git clone ssh://git@<repo-address>:dcae-collectors/OpenVESCollector.git
+git clone ssh://git@<repo-address>:dcae/collectors/ves/VESCollector.git
 mvn clean install
 ```
 
@@ -19,7 +19,7 @@ The jar file is bundled with DCM controller jar into a docker image; This will b
 #### Set up the packaging environment
 1. Extract the VESCollector code and do mvn build
 ```
-$ git clone ssh://git@<repo-address>:dcae-collectors/OpenVESCollector.git
+$ git clone ssh://git@<repo-address>:dcae/collectors/ves/VESCollector.git
 ```
 
 2. Once the collecter build is successful build dcae-controller
@@ -79,10 +79,10 @@ EOF
 ```
 4.	Extract VES collector jar and copy required directory into image build directory
 ```
-AR=${WORKSPACE}/target/OpenVESCollector-0.0.1-SNAPSHOT-bundle.tar.gz
+AR=${WORKSPACE}/target/VESCollector-0.0.1-SNAPSHOT-bundle.tar.gz
 STAGE=${WORKSPACE}/target/stage
 APP_DIR=${STAGE}/opt/app/SEC
-[ -d ${STAGE}/opt/app/OpenVESCollector-0.0.1-SNAPSHOT ] && rm -rf ${STAGE}/opt/app/OpenVESCollector-0.0.1-SNAPSHOT
+[ -d ${STAGE}/opt/app/VESCollector-0.0.1-SNAPSHOT ] && rm -rf ${STAGE}/opt/app/VESCollector-0.0.1-SNAPSHOT
 [ ! -f $APP_DIR ] && mkdir -p ${APP_DIR}
 gunzip -c ${AR} | tar xvf - -C ${APP_DIR} --strip-components=1
 # lji: removal of ^M in the VES startup script

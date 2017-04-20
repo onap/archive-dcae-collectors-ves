@@ -13,19 +13,19 @@ EXT=$(echo "$VERSION" | rev | cut -s -f1 -d'-' | rev)
 if [ -z "$EXT" ]; then
   EXT="STAGING"
 fi
-case $phase in 
+case $phase in
   verify|merge)
     if [ "$EXT" != 'SNAPSHOT' ]; then
       echo "$phase job only takes SNAPSHOT version, got \"$EXT\" instead"
       exit 1
-    fi 
+    fi
     ;;
   release)
     if [ ! -z "$EXT" ] && [ "$EXT" != 'STAGING' ]; then
       echo "$phase job only takes STAGING or pure numerical version, got \"$EXT\" instead"
       exit 1
     fi
-    ;; 
+    ;;
   *)
     echo "Unknown phase \"$phase\""
     exit 1
@@ -49,10 +49,10 @@ DCM_DIR="${STAGE}/opt/app/manager"
 unzip -qo -d "${DCM_DIR}" "${DCM_AR}"
 
 # unarchive the collector
-AR=${WORKSPACE}/target/OpenVESCollector-${VERSION}-bundle.tar.gz
-APP_DIR=${STAGE}/opt/app/SEC
+AR=${WORKSPACE}/target/VESCollector-${VERSION}-bundle.tar.gz
+APP_DIR=${STAGE}/opt/app/VESCollector
 
-[ -d "${STAGE}/opt/app/OpenVESCollector-${VERSION}" ] && rm -rf "${STAGE}/opt/app/OpenVESCollector-${VERSION}"
+[ -d "${STAGE}/opt/app/VESCollector-${VERSION}" ] && rm -rf "${STAGE}/opt/app/VESCollector-${VERSION}"
 
 [ ! -f "${APP_DIR}" ] && mkdir -p "${APP_DIR}"
 
@@ -80,8 +80,8 @@ cd \$WORKDIR
 echo 10.0.4.102 \$(hostname).dcae.simpledemo.openecomp.org >> /etc/hosts
 
 if [ ! -e config ]; then
-	echo no configuration directory setup: \$WORKDIR/config
-	exit 1
+        echo no configuration directory setup: \$WORKDIR/config
+        exit 1
 fi
 
 exec java -cp ./config:./lib:./lib/*:./bin \$MAIN \$ACTION > logs/manager.out 2>logs/manager.err
@@ -101,7 +101,7 @@ MAINTAINER dcae@lists.openecomp.org
 
 WORKDIR /opt/app/manager
 
-ENV HOME /opt/app/SEC
+ENV HOME /opt/app/VESCollector
 ENV JAVA_HOME /usr
 
 RUN apt-get update && apt-get install -y \
@@ -133,8 +133,8 @@ BUILD_PATH="${WORKSPACE}/target/stage"
 echo docker build --rm -t "${LFQI}" "${BUILD_PATH}"
 docker build --rm -t "${LFQI}" "${BUILD_PATH}"
 
-case $phase in 
-  verify) 
+case $phase in
+  verify)
     exit 0
   ;;
 esac
@@ -172,9 +172,9 @@ OLDTAG="${LFQI}"
 PUSHTAGS="${REPO}/${IMAGE}:${VERSION}${EXT}${TIMESTAMP} ${REPO}/${IMAGE}:latest ${REPO}/${IMAGE}:${VERSION2}${EXT}-latest"
 for NEWTAG in ${PUSHTAGS}
 do
-   echo "tagging ${OLDTAG} to ${NEWTAG}" 
+   echo "tagging ${OLDTAG} to ${NEWTAG}"
    docker tag "${OLDTAG}" "${NEWTAG}"
-   echo "pushing ${NEWTAG}" 
+   echo "pushing ${NEWTAG}"
    docker push "${NEWTAG}"
    OLDTAG="${NEWTAG}"
 done
