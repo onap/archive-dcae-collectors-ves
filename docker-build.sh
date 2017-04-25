@@ -148,16 +148,18 @@ esac
 # staging registry                   nexus3.openecomp.org:10004"
 case $EXT in
 SNAPSHOT|snapshot)
-    REPO='nexus3.openecomp.org:10003'
+    #REPO='nexus3.openecomp.org:10003'
+    REPO='nexus3.onap.org:10003'
     EXT="-SNAPSHOT"
     ;;
 STAGING|staging)
-    REPO='nexus3.openecomp.org:10003'
-    #REPO='nexus3.openecomp.org:10004'
+    #REPO='nexus3.openecomp.org:10003'
+    REPO='nexus3.onap.org:10003'
     EXT="-STAGING"
     ;;
 "")
-    REPO='nexus3.openecomp.org:10002'
+    #REPO='nexus3.openecomp.org:10002'
+    REPO='nexus3.onap.org:10002'
     EXT=""
     echo "version has no extension, intended for release, in \"$phase\" phase. donot do release here"
     exit 1
