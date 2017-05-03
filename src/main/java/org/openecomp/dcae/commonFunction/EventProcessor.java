@@ -69,8 +69,6 @@ public class EventProcessor implements Runnable {
 			//EventPublisher Ep=new EventPublisher();
 			while (event != null) {
 				// As long as the producer is running we remove elements from the queue.
-
-				//UUID uuid = UUID.fromString(event.get("VESuniqueId").toString());
 				String uuid = event.get("VESuniqueId").toString();
 				LoggingContext localLC = VESLogger.getLoggingContextForThread(uuid.toString());
 				localLC .put ( EcompFields.kBeginTimestampMs, SaClock.now () );
@@ -110,10 +108,9 @@ public class EventProcessor implements Runnable {
 		final SimpleDateFormat sdf =   new SimpleDateFormat("EEE, MM dd yyyy hh:mm:ss z"); 
 		sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
 		
-		JSONArray additionalParametersarray = new JSONArray().put(new JSONObject().put("collectorTimeStamp", sdf.format(currentTime)));
-		JSONObject additionalParameter = new JSONObject().put("additionalParameters",additionalParametersarray );
+		JSONObject collectorTimeStamp = new JSONObject().put("collectorTimeStamp",sdf.format(currentTime) );
 		JSONObject commonEventHeaderkey = event.getJSONObject("event").getJSONObject("commonEventHeader");
-		commonEventHeaderkey.put("internalHeaderFields", additionalParameter);
+		commonEventHeaderkey.put("internalHeaderFields", collectorTimeStamp);
 		event.getJSONObject("event").put("commonEventHeader",commonEventHeaderkey);		
 		log.debug("Modified event:" + event);
 		

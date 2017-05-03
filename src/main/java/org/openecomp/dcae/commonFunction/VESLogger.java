@@ -116,7 +116,7 @@ public class VESLogger {
 	                  build();
 	           	// Establish the request-specific UUID, as long as we are here...
 	    		threadLC.put("requestId", aUuid);
-	    		threadLC.put ( "statusCode", "COMPLETED" );
+	    		threadLC.put ( "statusCode", "COMPLETE" );
 	    		threadLC.put ( EcompFields.kEndTimestamp, SaClock.now () );
 	    		return threadLC;
 	    }	

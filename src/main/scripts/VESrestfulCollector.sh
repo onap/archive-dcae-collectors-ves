@@ -38,16 +38,6 @@ collector_start() {
         BASEDIR=`dirname $0`
         cd $BASEDIR/..
 
-        # use JAVA_HOME if provided
-        if [ -z "$JAVA_HOME" ]; then
-                echo "ERROR: JAVA_HOME not setup"
-                echo "Startup Aborted!!"
-                exit 1
-                #JAVA=java
-        else
-                JAVA=$JAVA_HOME/bin/java
-        fi
-
         # run java. The classpath is the etc dir for config files, and the lib dir
         # for all the jars.
         nohup $JAVA -cp "etc${PATHSEP}lib/*" $JAVA_OPTS -Dhttps.protocols=TLSv1.1,TLSv1.2 $MAINCLASS $* &
@@ -87,9 +77,20 @@ fi
 
 ## Pre-setting
 
+# use JAVA_HOME if provided
+if [ -z "$JAVA_HOME" ]; then
+        echo "ERROR: JAVA_HOME not setup"
+        echo "Startup Aborted!!"
+        exit 1
+        #JAVA=java
+else
+        JAVA=$JAVA_HOME/bin/java
+fi
+
+
 MAINCLASS=org.openecomp.dcae.commonFunction.CommonStartup
 
-# determin a path separator that works for this platform
+# determine a path separator that works for this platform
 PATHSEP=":"
 case "$(uname -s)" in
 
@@ -107,6 +108,20 @@ case "$(uname -s)" in
                 ;;
 esac
 
+
+if [ -z "$CONSUL_HOST" ] || [ -z "$CONFIG_BINDING_SERVICE" ] || [ -z "$DOCKER_HOST" ]; then
+  	echo "INFO: USING STANDARD CONTROLLER CONFIGURATION"
+else
+
+    echo "INFO: DYNAMIC CONFIG INTERFACE SUPPORTED"
+    CONFIG_UPDATER=org.openecomp.dcae.commonFunction.DynamicPropertyReader
+    $JAVA -cp "etc${PATHSEP}lib/*"  $CONFIG_UPDATER $* 
+    if [ $? -ne 0 ]; then
+    	echo "ERROR: Failed to read dynamic configuration from consul"
+    else
+    	echo "INFO: Dynamic config updated successfully!"
+    fi      
+fi
 
 
 case $1 in

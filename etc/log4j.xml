@@ -97,16 +97,6 @@
 		<layout class="com.att.nsa.logging.log4j.EcompLayout"><param name="ConversionPattern" value="ECOMP_DEBUG" /></layout>
 	</appender>
 
-
-	<root>
-		<level value="DEBUG" />
-		<appender-ref ref="FILE" />
-		<appender-ref ref="CONSOLE" />
-		<appender-ref ref="ECOMP_AUDIT" />
-		<appender-ref ref="ECOMP_DEBUG" />
-		<appender-ref ref="ECOMP_ERROR" />
-	</root>
-	
 	<logger name="org.openecomp.dcae.commonFunction.input" additivity="false">
             <level value="INFO"/>
             <appender-ref ref="IFILE"/>
@@ -169,5 +159,15 @@
 		<appender-ref ref="FILE" />
 		<appender-ref ref="CONSOLE" />
 	</logger>
+
+
+	<root>
+		<level value="DEBUG" />
+		<appender-ref ref="FILE" />
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="ECOMP_AUDIT" />
+		<appender-ref ref="ECOMP_DEBUG" />
+		<appender-ref ref="ECOMP_ERROR" />
+	</root>
 	
 </log4j:configuration>
