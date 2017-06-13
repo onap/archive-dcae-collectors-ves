@@ -77,7 +77,7 @@ mkdir -p \$LOGS
 
 cd \$WORKDIR
 
-echo 10.0.4.102 \$(hostname).dcae.simpledemo.openecomp.org >> /etc/hosts
+echo \$COLLECTOR_IP  \$(hostname).dcae.simpledemo.openecomp.org >> /etc/hosts
 
 if [ ! -e config ]; then
         echo no configuration directory setup: \$WORKDIR/config
