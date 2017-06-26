@@ -207,15 +207,18 @@ public class CommonStartup extends NsaBaseEndpoint implements Runnable
 			
 			
 			EventProcessor ep = new EventProcessor ();
-			//Thread epThread=new Thread(ep);
-			//epThread.start();
 			executor = Executors.newFixedThreadPool(20);
-			executor.execute(ep);
+			for (int i = 0; i < 20; i++) {
+				executor.execute(ep);
+			
+			 }
 		    
 		}
 		catch ( loadException | missingReqdSetting  | IOException | invalidSettingValue | ServletException | InterruptedException e )
 		{
 			CommonStartup.eplog.error("FATAL_STARTUP_ERROR" + e.getMessage() );
+			
+			e.printStackTrace();
 			throw new RuntimeException ( e );
 		}
 		finally
@@ -272,7 +275,7 @@ public class CommonStartup extends NsaBaseEndpoint implements Runnable
 			} 
 			log.debug("CommonStartup.handleEvents:EVENTS has been published successfully!");
 			CommonStartup.metriclog.info("EVENT_PUBLISH_END");
-			//ecomplogger.debug(secloggerMessageEnum.SEC_COLLECT_AND_PULIBISH_SUCCESS);
+		
 
 		}
 		catch ( JSONException e ){
@@ -338,4 +341,5 @@ public class CommonStartup extends NsaBaseEndpoint implements Runnable
 	static LinkedBlockingQueue<JSONObject> fProcessingInputQueue;
 	private static ApiServer fTomcatServer = null;
 	private static final Logger log = LoggerFactory.getLogger ( CommonStartup.class );
+
 }

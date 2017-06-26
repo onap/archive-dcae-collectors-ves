@@ -25,12 +25,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.util.UUID;
 
+
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONTokener;
+
 import org.openecomp.dcae.commonFunction.CommonStartup;
 import org.openecomp.dcae.commonFunction.CustomExceptionLoader;
 
@@ -62,8 +65,8 @@ public class EventReceipt extends NsaBaseEndpoint {
 		JSONObject jsonObject = null;
 		FileReader fr = null;
 		InputStream istr = null;
-		// String br = new BufferedReader(new
-		// InputStreamReader(ctx.request().getBodyStream())).readLine();
+		String msg = null;
+	
 		
 	
 		final UUID uuid = java.util.UUID.randomUUID();
@@ -74,14 +77,15 @@ public class EventReceipt extends NsaBaseEndpoint {
 		
 		try {
 
-			// JsonElement msg = new JsonParser().parse(new BufferedReader(new
-			// InputStreamReader(ctx.request().getBodyStream())).readLine());
+			// JsonElement msg = new JsonParser().parse(new BufferedReader(new InputStreamReader(ctx.request().getBodyStream())).readLine());
+			istr = ctx.request().getBodyStream();		
+			msg = IOUtils.toString(istr); 			
+			jsonObject = new JSONObject(msg);
+			
+			//jsonObject = new JSONObject(new JSONTokener(istr));
 
-			istr = ctx.request().getBodyStream();
-			jsonObject = new JSONObject(new JSONTokener(istr));
-
-			CommonStartup.inlog.info(ctx.request().getRemoteAddress() + "Input Messsage: " + jsonObject);
-			log.info(ctx.request().getRemoteAddress() + "Input Messsage: " + jsonObject);
+			CommonStartup.inlog.info(ctx.request().getRemoteAddress() + " VESuniqueId:" +  uuid + " Input Messsage: " + jsonObject);
+			log.info(ctx.request().getRemoteAddress() + " VESuniqueId:" +  uuid + " Input Messsage: " + jsonObject);
 
 			try {
 
@@ -101,6 +105,12 @@ public class EventReceipt extends NsaBaseEndpoint {
 
 				if (CommonStartup.schema_Validatorflag > 0) {
 
+					if (jsonObject.has("eventList"))
+					{
+						log.info("Validation failed - contains batch eventList block ");
+						respondWithCustomMsginJson(ctx, HttpStatusCodes.k400_badRequest, "Schema validation failed");
+						return;						
+					}
 					fr = new FileReader(CommonStartup.schemaFile);
 					String schema = new JsonParser().parse(fr).toString();
 
@@ -108,11 +118,11 @@ public class EventReceipt extends NsaBaseEndpoint {
 					if (valresult.equals("true")) {
 						log.info("Validation successful");
 					} else if (valresult.equals("false")) {
-						log.info("Validation failed");
+						log.info("Validation failed on schema check");
 						respondWithCustomMsginJson(ctx, HttpStatusCodes.k400_badRequest, "Schema validation failed");
 						return;
 					} else {
-						log.error("Validation errored" + valresult);
+						log.error("Validation errored on schema check" + valresult);
 						respondWithCustomMsginJson(ctx, HttpStatusCodes.k400_badRequest, "Couldn't parse JSON object");
 						return;
 					}
@@ -137,16 +147,18 @@ public class EventReceipt extends NsaBaseEndpoint {
 				return;
 			}
 
-		} catch (JSONException | NullPointerException | IOException x) {
+		} catch (JSONException | NullPointerException | IOException e) {
+			e.printStackTrace();
 			log.error("Couldn't parse JSON Array - HttpStatusCodes.k400_badRequest" + HttpStatusCodes.k400_badRequest
-					+ " Message:" + x.getMessage());
-			CommonStartup.eplog.info("EVENT_RECEIPT_FAILURE: Invalid user request " + x.toString());
+					+ " Message:" + e.getMessage() + istr.toString() + msg);
+			CommonStartup.eplog.info("EVENT_RECEIPT_FAILURE: Invalid user request" + e.toString() + msg) ;
+		
 			respondWithCustomMsginJson(ctx, HttpStatusCodes.k400_badRequest, "Couldn't parse JSON object");
 			return;
 		} catch (QueueFullException e) {
 			e.printStackTrace();
-			log.error("Collector internal queue full  :" + e.getMessage());
-			CommonStartup.eplog.info("EVENT_RECEIPT_FAILURE: QueueFull" + e.toString());
+			log.error("Collector internal queue full  :" + e.getMessage() + msg);
+			CommonStartup.eplog.info("EVENT_RECEIPT_FAILURE: QueueFull" + e.toString() + msg);
 			respondWithCustomMsginJson(ctx, HttpStatusCodes.k503_serviceUnavailable, "Queue full");
 			return;
 		} finally {
@@ -174,15 +186,10 @@ public class EventReceipt extends NsaBaseEndpoint {
 		JSONObject jsonObject = null;
 		FileReader fr = null;
 		InputStream istr = null;
+		String msg = null;
 
 		try {
 
-			// String br = new BufferedReader(new
-			// InputStreamReader(ctx.request().getBodyStream())).readLine();
-			// JsonElement msg = new JsonParser().parse(new BufferedReader(new
-			// InputStreamReader(ctx.request().getBodyStream())).readLine());
-			// jsonArray = new JSONArray ( new JSONTokener ( ctx.request
-			// ().getBodyStream () ) );
 
 			final UUID uuid = java.util.UUID.randomUUID();
 			LoggingContext localLC = VESLogger.getLoggingContextForThread(uuid);
@@ -192,13 +199,17 @@ public class EventReceipt extends NsaBaseEndpoint {
 			log.debug ("Request recieved :" + ctx.request().getRemoteAddress());
 			
 			istr = ctx.request().getBodyStream();
-			jsonObject = new JSONObject(new JSONTokener(istr));
-			// jsonObject = new JSONObject ( new JSONTokener ( ctx.request
-			// ().getBodyStream () ) );
+			
+			msg = IOUtils.toString(istr); 			
+			jsonObject = new JSONObject(msg);
+			
+			//jsonObject = new JSONObject(new JSONTokener(istr));
 
-			CommonStartup.inlog.info(ctx.request().getRemoteAddress() + "Input Messsage: " + jsonObject);
-			log.info("Input Messsage: " + jsonObject);
 
+			CommonStartup.inlog.info(ctx.request().getRemoteAddress() + " VESuniqueId:" +  uuid + " Input Batch: " + jsonObject);
+			log.info(ctx.request().getRemoteAddress() + " VESuniqueId:" +  uuid + " Input Batch: " + jsonObject);
+
+			
 			try {
 				if (CommonStartup.authflag == 1) {
 					retkey = NsaBaseEndpoint.getAuthenticatedUser(ctx);
@@ -214,31 +225,42 @@ public class EventReceipt extends NsaBaseEndpoint {
 			if (retkey != null || CommonStartup.authflag == 0) {
 				if (CommonStartup.schema_Validatorflag > 0) {
 
+					
+				
 					fr = new FileReader(CommonStartup.schemaFile);
 					String schema = new JsonParser().parse(fr).toString();
 
 					valresult = CommonStartup.schemavalidate(jsonObject.toString(), schema);
 					if (valresult.equals("true")) {
-						log.info("Validation successful");
+						log.info("Validation successful on schema check");
 					} else if (valresult.equals("false")) {
-						log.info("Validation failed");
+						log.info("Validation failed on schema check");
 						respondWithCustomMsginJson(ctx, HttpStatusCodes.k400_badRequest, "Schema validation failed");
 
 						return;
 					} else {
-						log.error("Validation errored" + valresult);
+						log.error("Validation errored on schema check" + valresult);
 						respondWithCustomMsginJson(ctx, HttpStatusCodes.k400_badRequest, "Couldn't parse JSON object");
 						return;
 
 					}
 					jsonArray = jsonObject.getJSONArray("eventList");
-					log.info("Validation successful for all events in batch");
+					
 					for (int i = 0; i < jsonArray.length(); i++) {
+						
+						if (jsonArray.getJSONObject(i).has("event"))
+						{
+							log.info("Validation failed - contains sub event block ");
+							respondWithCustomMsginJson(ctx, HttpStatusCodes.k400_badRequest, "Schema validation failed");
+							return;						
+						}
+						
 						event = new JSONObject().put("event", jsonArray.getJSONObject(i));
 						event.put("VESuniqueId", uuid + "-"+i);
 						jsonArrayMod.put(event);
 					}
 
+					log.info("Validation successful for all events in batch");
 					log.info("Modified jsonarray:" + jsonArrayMod.toString());
 
 				}
@@ -258,16 +280,17 @@ public class EventReceipt extends NsaBaseEndpoint {
 				respondWithCustomMsginJson(ctx, HttpStatusCodes.k401_unauthorized, "Unauthorized user");
 				return;
 			}
-		} catch (JSONException | NullPointerException | IOException x) {
+		} catch (JSONException | NullPointerException | IOException e) {
+			e.printStackTrace();
 			log.error("Couldn't parse JSON Array - HttpStatusCodes.k400_badRequest" + HttpStatusCodes.k400_badRequest
-					+ " Message:" + x.getMessage());
-			CommonStartup.eplog.info("EVENT_RECEIPT_FAILURE: Invalid user request " + x.toString());
+					+ " Message:" + e.getMessage() + msg);
+			CommonStartup.eplog.info("EVENT_RECEIPT_FAILURE: Invalid user request " + e.toString() + msg);
 			respondWithCustomMsginJson(ctx, HttpStatusCodes.k400_badRequest, "Couldn't parse JSON object");
 			return;
 		} catch (QueueFullException e) {
 			e.printStackTrace();
-			log.error("Collector internal queue full  :" + e.getMessage());
-			CommonStartup.eplog.info("EVENT_RECEIPT_FAILURE: QueueFull" + e.toString());
+			log.error("Collector internal queue full  :" + e.getMessage() + msg);
+			CommonStartup.eplog.info("EVENT_RECEIPT_FAILURE: QueueFull" + e.toString() + msg);
 			respondWithCustomMsginJson(ctx, HttpStatusCodes.k503_serviceUnavailable, "Queue full");
 			return;
 		} finally {
@@ -310,6 +333,7 @@ public class EventReceipt extends NsaBaseEndpoint {
 		}
 
 	}
+	
 
 	public static void safeClose(FileReader fr) {
 		if (fr != null) {
