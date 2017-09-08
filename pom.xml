@@ -4,7 +4,7 @@
 	<groupId>org.openecomp.dcae.collectors.ves</groupId>
 	<artifactId>VESCollector</artifactId>
 	<version>1.1.0-SNAPSHOT</version>
-	<name>VESCollector</name>
+	<name>dcae-collectors-ves</name>
 	<description>VESCollector</description>
 
 	<properties>
